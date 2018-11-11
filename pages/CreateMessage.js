@@ -12,6 +12,18 @@ class CreateMessage extends react.Component {
 
     }
   }
+  
+  submitMessage = (e) => {
+    e.preventDefault();
+    const socket = io();
+    socket.emit('chat message', this.state.newMessage);
+    this.setState({
+      newMessage: {
+        user: this.props.user,
+        message: ''
+      }
+    })
+  }
 
   handleMessageChange = (message) => {
     this.setState({
@@ -20,12 +32,6 @@ class CreateMessage extends react.Component {
         message: message
       }
     })
-  }
-
-  submitMessage = (e) => {
-    e.preventDefault();
-    const socket = io();
-    socket.emit('chat message', this.state.newMessage);
   }
 
   render() {

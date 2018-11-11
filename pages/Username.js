@@ -2,7 +2,7 @@ import react from 'react';
 
 //fake simple username input 
 //will replace with auth
-const Username = ({user, usernameInput, submitUsername, handleUsernameChange}) => {
+const Username = ({user, users, usernameInput, submitUsername, handleUsernameChange}) => {
   return (
     <div>
       <div>
@@ -15,6 +15,10 @@ const Username = ({user, usernameInput, submitUsername, handleUsernameChange}) =
           </form>
         </div> :
         `Hello ${user}`}
+        <div>Online Users:</div>
+        {users.map((usr, i) => {
+          return <div key={i}>{usr}</div>
+        })}
        </div>
     </div>
   )

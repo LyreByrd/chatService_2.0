@@ -18,8 +18,12 @@ io.on('connection', socket => {
   //   message: 'Welcome to LyreByrd'
   // })
   socket.on('chat message', (msg) => {
-    console.log('message: ', msg);
     io.emit('chat message', msg);
+  })
+
+  socket.on('user connected', (username) => {
+    console.log('user connected: ', username);
+    io.emit('user connected', username)
   })
 })
 
@@ -31,6 +35,6 @@ nextApp.prepare().then(() => {
 
   server.listen(port, (err) => {
     if (err) throw err;
-    console.log(`*=* Listening on http://localhost:${port} *=*`)
+    console.log(`>> Listening on http://localhost:${port}`)
   })
 })
