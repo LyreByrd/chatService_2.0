@@ -1,7 +1,17 @@
 import react from 'react';
 import io from 'socket.io-client';
 import Username from './Username';
+import CreateMessage from './CreateMessage';
+import Messages from './Messages'
 
+const messageWindowStyle = {
+  border: 'solid 1px black',
+  display: 'flex',
+  'flexFlow': 'column',
+  flex: '1 1 auto',
+  height: '500px',
+  width: '400px'
+}
 class Chat extends React.Component {
   constructor(props) {
     super(props)
@@ -21,9 +31,9 @@ class Chat extends React.Component {
       console.log('chat connection', data);
     })
     socket.on('chat message', message => {
-      console.log('chat message', message);
+      // console.log('chat message', message);
       this.setState((prevState, props) => ({
-        messages: [...messages, message]
+        messages: [...prevState.messages, message]
       }))
     })
   }
@@ -52,9 +62,14 @@ class Chat extends React.Component {
           usernameInput={this.state.usernameInput}
           handleUsernameChange={this.handleUsernameChange}
         />
-        <div className={messageWindowStyle}>
-          chat window
+        <div style={messageWindowStyle}>
+          <Messages 
+            messages={this.state.messages}
+          />
         </div>
+        <CreateMessage 
+          user={this.state.user}
+        />
       </div>
     )
   }
