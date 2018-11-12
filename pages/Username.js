@@ -8,7 +8,7 @@ const Username = ({user, users, usernameInput, submitUsername, handleUsernameCha
       <div>
         {user === '' ? 
         <div>
-          <div>Please Select Your Username:</div>
+          <div>Please Select Your Name:</div>
           <form className='usernameSelect' onSubmit={ (e) => submitUsername(e) } >
             <input type='text' placeholder='Username' value={usernameInput} onChange={ () => handleUsernameChange(event.target.value) }/>
             <input type='submit' onClick={ (e) => submitUsername(e) }/>
