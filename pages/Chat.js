@@ -41,10 +41,10 @@ class Chat extends React.Component {
       }))
     })
 
-    socket.on('user connected', username => {
-      this.setState((prevState) => ({
-        users: [...prevState.users, username]
-      }))
+    socket.on('user connected', userArray => {
+      this.setState({
+        users: userArray
+      })
     })
 
     this.messagesScrollDown();

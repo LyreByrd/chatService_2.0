@@ -12,16 +12,22 @@ const nextHandler = nextApp.getRequestHandler()
 let port = 3000;
 
 io.on('connection', socket => {
-  console.log('IO connected');
-  
+
+
   socket.on('chat message', (msg) => {
     io.emit('chat message', msg);
   })
 
+  // const allUsers = [];
   socket.on('user connected', (username) => {
     console.log('user connected: ', username);
+    // allUsers.push(username);
     io.emit('user connected', username)
   })
+
+
+
+  socket.on('disconnect')
 })
 
 nextApp.prepare().then(() => {
