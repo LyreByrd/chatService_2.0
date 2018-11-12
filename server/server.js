@@ -1,4 +1,3 @@
-const axios = require('axios')
 const next = require('next')
 const app = require('express')()
 const server = require('http').Server(app)
@@ -14,9 +13,7 @@ let port = 3000;
 
 io.on('connection', socket => {
   console.log('IO connected');
-  // socket.emit({
-  //   message: 'Welcome to LyreByrd'
-  // })
+  
   socket.on('chat message', (msg) => {
     io.emit('chat message', msg);
   })

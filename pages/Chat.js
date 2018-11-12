@@ -4,13 +4,13 @@ import Username from './Username';
 import CreateMessage from './CreateMessage';
 import Messages from './Messages'
 
-const messageWindowStyle = {
+const messagesStyle = {
   border: 'solid 1px black',
   display: 'flex',
-  'flexFlow': 'column',
   flex: '1 1 auto',
   height: '500px',
-  width: '400px'
+  width: '400px',
+  overflowY: 'scroll'
 }
 class Chat extends React.Component {
   constructor(props) {
@@ -23,25 +23,42 @@ class Chat extends React.Component {
     }
     this.submitUsername = this.submitUsername.bind(this);
     this.handleUsernameChange = this.handleUsernameChange.bind(this);
+    this.messageRef = React.createRef();
 
   }
 
   componentDidMount() {
     const socket = io();
+
     socket.on('connection', data => {
       console.log('chat connection', data);
     })
+
     socket.on('chat message', message => {
       // console.log('chat message', message);
       this.setState((prevState) => ({
         messages: [...prevState.messages, message]
       }))
     })
+
     socket.on('user connected', username => {
       this.setState((prevState) => ({
         users: [...prevState.users, username]
       }))
     })
+
+    this.messagesScrollDown();
+  }
+
+  componentDidUpdate() {
+    this.messagesScrollDown();
+  }
+
+  messagesScrollDown = () => {
+    const scrollHeight = this.messageRef.scrollHeight;
+    const height = this.messageRef.clientHeight;
+    const maxScrollTop = scrollHeight - height;
+    this.messageRef.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
   }
 
   //username methods
@@ -73,10 +90,15 @@ class Chat extends React.Component {
           usernameInput={this.state.usernameInput}
           handleUsernameChange={this.handleUsernameChange}
         />
-        <div style={messageWindowStyle}>
+        <div 
+          style={messagesStyle}
+          ref={(el) => this.messageRef = el}>
           <Messages 
             messages={this.state.messages}
           />
+          <div style={{ float:"left", clear: "both" }}
+               ref={(el) => { this.messageRef = el; }}>
+          </div>
         </div>
         <CreateMessage 
           user={this.state.user}
