@@ -29,11 +29,17 @@ class Chat extends React.Component {
 
   componentDidMount() {
     const socket = io();
-
+    
     socket.on('connection', data => {
       console.log('chat connection', data);
     })
 
+    socket.on('online users', userTuple => {
+      this.setState((prevState) => ({
+        users: [...prevState.users, userTuple]
+      }))
+    })
+    
     socket.on('chat message', message => {
       // console.log('chat message', message);
       this.setState((prevState) => ({
@@ -41,10 +47,14 @@ class Chat extends React.Component {
       }))
     })
 
-    socket.on('user connected', userArray => {
-      this.setState({
-        users: userArray
-      })
+    socket.on('user connected', userTuple => {
+      this.setState((prevState) => ({
+        users: [...prevState.users, userTuple]
+      }))
+    })
+
+    socket.on('disconnect', () => {
+
     })
 
     this.messagesScrollDown();
@@ -68,7 +78,6 @@ class Chat extends React.Component {
     this.setState({
       user: this.state.usernameInput
     })
-    console.log('user after submit', this.state.usernameInput)
     socket.emit('user connected', this.state.usernameInput);
   }
 
