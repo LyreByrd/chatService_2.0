@@ -17,7 +17,7 @@ class Chat extends React.Component {
     super(props)
     this.state = {
       user: '',
-      users: [],
+      users: {},
       messages: [],
       usernameInput: ''
     }
@@ -34,10 +34,12 @@ class Chat extends React.Component {
       console.log('chat connection', data);
     })
 
-    socket.on('online users', userTuple => {
-      this.setState((prevState) => ({
-        users: [...prevState.users, userTuple]
-      }))
+    socket.on('online users', usersObj => {
+      console.log('init users', usersObj);
+      console.log('socket username ', socket.username)
+      this.setState({
+        users: usersObj
+      })
     })
     
     socket.on('chat message', message => {
@@ -46,15 +48,20 @@ class Chat extends React.Component {
         messages: [...prevState.messages, message]
       }))
     })
-
-    socket.on('user connected', userTuple => {
-      this.setState((prevState) => ({
-        users: [...prevState.users, userTuple]
-      }))
+    
+    socket.on('user connected', usersObj => {
+      console.log('socket username ', socket.username)
+      console.log('user connected', usersObj);
+      this.setState({
+        users: usersObj
+      })
     })
 
-    socket.on('disconnect', () => {
-
+    socket.on('user disconnected', (usersObj) => {
+      console.log('user disconnected', usersObj);
+      this.setState({
+        users: usersObj
+      })
     })
 
     this.messagesScrollDown();

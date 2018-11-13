@@ -1,18 +1,16 @@
 import react from 'react';
 
+//oauth 
+
 //fake simple username input 
 //will replace with auth
 const Username = ({user, users, usernameInput, submitUsername, handleUsernameChange}) => {
 
   const onlineUsers = (users) => {
-    console.log('users in map', users)
-    if (users.length > 1) {
-      return users.map((user, i) => {
-        console.log('user in map', user);
-        if (user !== []) {
-          return <div key={i}>{user[0][0]}</div>;
-        }
-      });
+    if (Object.keys(users).length > 0) {
+      return Object.values(users).map((user, i) => {
+        return <div key={i}>{user}</div>
+      })
     }
   }
 
