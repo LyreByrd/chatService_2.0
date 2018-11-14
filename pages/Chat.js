@@ -35,30 +35,43 @@ class Chat extends React.Component {
     })
 
     socket.on('online users', usersObj => {
-      console.log('init users', usersObj);
-      console.log('socket username ', socket.username)
+      // console.log('init users', usersObj);
+      // console.log('socket username ', socket.username)
       this.setState({
         users: usersObj
       })
     })
     
     socket.on('chat message', message => {
-      // console.log('chat message', message);
-      this.setState((prevState) => ({
-        messages: [...prevState.messages, message]
-      }))
+      // console.log('chat message on client from socket.io', message);
+      // console.log('chat message on client from socket.io', Array.isArray(message));
+      if(typeof message[0] === 'string') {
+        message = message.map(string => {
+          return JSON.parse(string)
+        })
+      }
+      // console.log('message', message);
+      // todo this is bad. im sending all messages to all users on new connection
+      // todo need to make socket only send to new connection
+      // todo will be easier once rooms are set up
+      if (this.state.user !== '' && this.state.messages.length !== message.length) {
+        this.setState((prevState) => ({
+          messages: [...prevState.messages, ...message]
+        }))
+      } 
     })
     
     socket.on('user connected', usersObj => {
-      console.log('socket username ', socket.username)
-      console.log('user connected', usersObj);
+      // console.log('socket username ', socket.username)
+      // console.log('user connected', usersObj);
       this.setState({
         users: usersObj
       })
+      // console.log('users ',this.state.users)
     })
 
     socket.on('user disconnected', (usersObj) => {
-      console.log('user disconnected', usersObj);
+      // console.log('user disconnected', usersObj);
       this.setState({
         users: usersObj
       })

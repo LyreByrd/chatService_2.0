@@ -22,25 +22,11 @@ const pub = redis(REDIS_PORT, REDIS_HOST, { auth_pass: REDIS_PASS });
 const sub = redis(REDIS_PORT, REDIS_HOST, { auth_pass: REDIS_PASS });
 io.adapter(adapter({ pubClient: pub, subClient: sub }));
 
-// console.log('pub', pub);
-
 let port = process.env.PORT || 3000;
-
-// redis
-// adapter.pubClient.on('error', function () {
-//   console.log('error on redis pub *+*+*+*')
-// });
-
-// adapter.subClient.on('error', function () {
-//   console.log('error on redis pub *+*+*+*')
-// });
-
-
-
 
 //socket.io
 const users = {};
-const messages = {};
+// const messages = {};
 io.on('connection', socket => {
 
   //sends online users on connection
@@ -60,9 +46,9 @@ io.on('connection', socket => {
 
   //sends message
   socket.on('chat message', (msg) => {
-    console.log('chat msg :', msg);
+    // console.log('chat msg :', msg);
     pub.rpush('messages', JSON.stringify(msg));
-    io.emit('chat message', msg);
+    io.emit('chat message', [msg]);
   })
 
   //adds new user on connection
@@ -75,11 +61,20 @@ io.on('connection', socket => {
     socket.username = username;
     //adds a key to users object
     users[socket.id] = username;
+    // console.log('users obj on server', users)
     //sends users object to redis
-    pub.hmset(`users ${username}`, 'username', JSON.stringify(username), 'socket-id', JSON.stringify(socket.id));
+    // pub.hmset(`users ${username}`, 'username', JSON.stringify(username), 'socket-id', JSON.stringify(socket.id));
     // console.log('users are: ', users);
     io.emit('user connected', users)
-    io.emit('chat message', {user: 'connected', message: `Welcome ${username}!`})
+    pub.lrange('messages', 0, -1, (err, messages) => {
+      if (err) {console.log('error getting messages from redis', err)}
+      else {
+        // console.log('socket.id', socket.id)
+        // console.log('messages from redis on user connect inside pub.lrange', messages);
+        io.emit('chat message', [...messages, JSON.stringify({user: 'connected', message: `Welcome ${username}!`})])
+        // socket.emit('chat message', messages);
+      }
+    });
   })
 
   //updates and emits users on disconnect 
@@ -96,7 +91,7 @@ io.on('connection', socket => {
     // pub.hdel(`users ${username}`, JSON.stringify(users));
     socket.emit('user disconnected', users)
     if (username) {
-      io.emit('chat message', {user: 'disconnected', message:`Goodbye ${username}!`})
+      socket.emit('chat message', [{user: 'disconnected', message:`Goodbye ${username}!`}])
     }
   })
 })
