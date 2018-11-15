@@ -29,6 +29,7 @@ class Chat extends React.Component {
 
   componentDidMount() {
     const socket = io();
+    socket.connect('104.18.123.144:443');
     
     socket.on('connection', data => {
       console.log('chat connection', data);

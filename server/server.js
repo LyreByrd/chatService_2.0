@@ -60,7 +60,7 @@ io.on('connection', socket => {
     //sets socket.username from client provided username string
     socket.username = username;
     //adds a key to users object
-    users[socket.id] = username;
+    users[socket.id] = username; // todo change username to socket
     // console.log('users obj on server', users)
     //sends users object to redis
     // pub.hmset(`users ${username}`, 'username', JSON.stringify(username), 'socket-id', JSON.stringify(socket.id));
