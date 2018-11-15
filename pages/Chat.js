@@ -29,7 +29,7 @@ class Chat extends React.Component {
 
   componentDidMount() {
     const socket = io();
-    socket.connect();
+    // socket.connect();
     
     socket.on('connection', data => {
       console.log('chat connection', data);
