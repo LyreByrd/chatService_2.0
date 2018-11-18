@@ -113,6 +113,7 @@ class Chat extends React.Component {
   render() {
     return (
       <div>
+        
         <Username 
           user={this.state.user}
           users={this.state.users}

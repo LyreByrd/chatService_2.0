@@ -6,9 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "next",
-    "node": "nodemon server/server.js",
+    "server": "nodemon server/server.js",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "micro-start": "micro",
+    "micro-dev": "micro-dev"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +19,7 @@
     "body-parser": "^1.18.3",
     "dotenv": "^6.1.0",
     "express": "^4.16.4",
+    "micro": "^9.3.3",
     "next": "^7.0.2",
     "react": "^16.6.1",
     "react-dom": "^16.6.1",
@@ -24,5 +27,8 @@
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
     "socket.io-redis": "^5.2.0"
+  },
+  "devDependencies": {
+    "micro-dev": "^3.0.0"
   }
 }

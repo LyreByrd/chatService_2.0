@@ -22,13 +22,13 @@ const pub = redis(REDIS_PORT, REDIS_HOST, { auth_pass: REDIS_PASS });
 const sub = redis(REDIS_PORT, REDIS_HOST, { auth_pass: REDIS_PASS });
 io.adapter(adapter({ pubClient: pub, subClient: sub }));
 
-let port = process.env.PORT || 3000;
+let port = process.env.PORT || 8000;
 
 //socket.io
 const users = {};
 // const messages = {};
 io.on('connection', socket => {
-
+  
   //sends online users on connection
   socket.emit('online users', users);
   // pub.hgetall('users', (err, obj) => {
@@ -53,9 +53,10 @@ io.on('connection', socket => {
 
   //adds new user on connection
   socket.on('user connected', (username) => {
-    
+    io.emit('chat message', [JSON.stringify({user: 'user connected', message: `Welcome ${username}!`})])
+    pub.rpush('messages', JSON.stringify({user: 'user connected', message: `Welcome ${username}!`}));
     // console.log('online clients: ', online);
-    // console.log('user connected: ', username, 'on socket: ', socket.id);
+    console.log('user connected: ', username, 'on socket: ', socket.id);
 
     //sets socket.username from client provided username string
     socket.username = username;
@@ -71,7 +72,7 @@ io.on('connection', socket => {
       else {
         // console.log('socket.id', socket.id)
         // console.log('messages from redis on user connect inside pub.lrange', messages);
-        io.emit('chat message', [...messages, JSON.stringify({user: 'connected', message: `Welcome ${username}!`})])
+        io.emit('chat message', [...messages])
         // socket.emit('chat message', messages);
       }
     });
@@ -91,19 +92,29 @@ io.on('connection', socket => {
     // pub.hdel(`users ${username}`, JSON.stringify(users));
     socket.emit('user disconnected', users)
     if (username) {
-      socket.emit('chat message', [{user: 'disconnected', message:`Goodbye ${username}!`}])
+      pub.rpush('messages', JSON.stringify({user: 'user disconnected', message: `Goodbye ${username}!`}))
+      io.emit('chat message', [{user: 'user disconnected', message:`Goodbye ${username}!`}])
+      io.emit('user connected', users)
     }
   })
 })
 
 
 
+
 //next.js
 nextApp.prepare().then(() => {
+
+  app.get('/chat/getChat', (req, res) => {
+    console.log(req);
+    res.sendFile('webpack.js', {root: `${__dirname}/../.next/static/runtime/`});
+  })
 
   app.get('*', (req, res) => {
     return nextHandler(req, res);
   })
+
+  
 
   server.listen(port, (err) => {
     if (err) throw err;
