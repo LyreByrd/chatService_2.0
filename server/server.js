@@ -48,7 +48,7 @@ io.on('connection', socket => {
 
     //send all users from room to update client online list
     pub.lrange(`room_${socket.room}`, 0, -1, (err, users) => {
-      if (err) {console.log(`error getting users from redis: ${err}`)}
+      if (err) { console.log(`error getting users from redis: ${err}`) }
       else {
         io.sockets.in(socket.room).emit('update users', users)
       }
@@ -56,7 +56,7 @@ io.on('connection', socket => {
 
     
     pub.lrange(`messages_${socket.room}`, 0, -1, (err, messages) => {
-      if (err) {console.log('error getting messages from redis', err)}
+      if (err) { console.log('error getting messages from redis', err) }
       else {
         // console.log('socket.id', socket.id)
         // console.log('messages from redis on user connect inside pub.lrange', messages);
@@ -84,15 +84,21 @@ io.on('connection', socket => {
     let room = socket.room;
 
     //removes user from room list
-    pub.lrem(`room_${room}`, -1, username, (err, data) => {
+    pub.lrem(`room_${room}`, -99, username, (err, data) => {
       if (err) { console.log('error in username removal from room :', err) }
       else { console.log(`user: ${username} disconnected from room: ${room }`) }
     })
 
     //updates new online users list
-    pub.lrange(`room_${room}`, 0, -99, (err, users) => {
-      if (err) { console.log('error getting users from redis :', err) }
-      else { io.sockets.in(room).emit('user disconnected', users) }
+    pub.lrange(`room_${room}`, 0, -1, (err, users) => {
+      if (users.length > 0) {
+        if (err) { console.log('error getting users from redis :', err) }
+        else { io.sockets.in(room).emit('user disconnected', users) }
+      } else {
+        //deletes message data if room is empty
+        if (err) { console.log('error getting users from redis :', err) }
+        else { pub.del(`messages_${room}`) }
+      }
     })
 
     //disconnects socket from room;
