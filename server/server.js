@@ -25,77 +25,79 @@ io.adapter(adapter({ pubClient: pub, subClient: sub }));
 let port = process.env.PORT || 8000;
 
 //socket.io
-const users = {};
+// const users = {};
+// rooms = [];
 // const messages = {};
 io.on('connection', socket => {
-  
-  //sends online users on connection
-  socket.emit('online users', users);
-  // pub.hgetall('users', (err, obj) => {
-  //   if (err) {
-  //     console.log('error getting users', err)
-  //   } else {
-  //     console.dir(obj)
-  //   }
-  // })
-  // sub.get('users', (err, data) => {
-    // if (data) {
-    //   console.log('users data from redis', data)
-    // }
-  // })
 
-  //sends message
-  socket.on('chat message', (msg) => {
-    // console.log('chat msg :', msg);
-    pub.rpush('messages', JSON.stringify(msg));
-    io.emit('chat message', [msg]);
+  //joins room and sets room on socket
+  socket.on('join room', room => {
+    socket.room = room;
+    socket.join(room);
   })
 
-  //adds new user on connection
+  //on new user connection
   socket.on('user connected', (username) => {
-    io.emit('chat message', [JSON.stringify({user: 'user connected', message: `Welcome ${username}!`})])
-    pub.rpush('messages', JSON.stringify({user: 'user connected', message: `Welcome ${username}!`}));
-    // console.log('online clients: ', online);
-    console.log('user connected: ', username, 'on socket: ', socket.id);
-
+    console.log('user connected :', username, 'on socket :', socket.id, 'in room :', socket.room);
+    
     //sets socket.username from client provided username string
     socket.username = username;
-    //adds a key to users object
-    users[socket.id] = username; // todo change username to socket
-    // console.log('users obj on server', users)
-    //sends users object to redis
-    // pub.hmset(`users ${username}`, 'username', JSON.stringify(username), 'socket-id', JSON.stringify(socket.id));
-    // console.log('users are: ', users);
-    io.emit('user connected', users)
-    pub.lrange('messages', 0, -1, (err, messages) => {
+
+    //pushes to redis users in room list
+    pub.lpush(`room_${socket.room}`, socket.username);
+
+    //send all users from room to update client online list
+    pub.lrange(`room_${socket.room}`, 0, -1, (err, users) => {
+      if (err) {console.log(`error getting users from redis: ${err}`)}
+      else {
+        io.sockets.in(socket.room).emit('update users', users)
+      }
+    })
+
+    
+    pub.lrange(`messages_${socket.room}`, 0, -1, (err, messages) => {
       if (err) {console.log('error getting messages from redis', err)}
       else {
         // console.log('socket.id', socket.id)
         // console.log('messages from redis on user connect inside pub.lrange', messages);
-        io.emit('chat message', [...messages])
+        socket.emit('fetch messages', [...messages])
         // socket.emit('chat message', messages);
       }
     });
   })
 
+  //sends message
+  socket.on('chat message', (msg) => {
+    let room = msg.host;
+    console.log('chat msg :', msg, 'in room:', room);
+    io.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
+    pub.rpush(`messages_${room}`, JSON.stringify(msg));
+    pub.ltrim(`messages_${room}`, 0, 99);
+  })
+
+
   //updates and emits users on disconnect 
   socket.on('disconnect', () => {
-    // console.log('disconnected socket ', socket.id)
-    // console.log('users disconnected 1', users, 'online sockets: ', online);
 
     //gets username of disconnected socket
-    username = socket.username;
-    //deletes user
-    delete users[socket.id]
-    // io.sockets.connected[socket.id].disconnect()
-    // console.log('user disconnected 2', users, 'online sockets: ', online);
-    // pub.hdel(`users ${username}`, JSON.stringify(users));
-    socket.emit('user disconnected', users)
-    if (username) {
-      pub.rpush('messages', JSON.stringify({user: 'user disconnected', message: `Goodbye ${username}!`}))
-      io.emit('chat message', [{user: 'user disconnected', message:`Goodbye ${username}!`}])
-      io.emit('user connected', users)
-    }
+    let username = socket.username;
+    let room = socket.room;
+
+    //removes user from room list
+    pub.lrem(`room_${room}`, -1, username, (err, data) => {
+      if (err) { console.log('error in username removal from room :', err) }
+      else { console.log(`user: ${username} disconnected from room: ${room }`) }
+    })
+
+    //updates new online users list
+    pub.lrange(`room_${room}`, 0, -99, (err, users) => {
+      if (err) { console.log('error getting users from redis :', err) }
+      else { io.sockets.in(room).emit('user disconnected', users) }
+    })
+
+    //disconnects socket from room;
+    socket.leave(socket.room);
+    socket.room = null;
   })
 })
 
