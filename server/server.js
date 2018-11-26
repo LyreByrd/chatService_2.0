@@ -84,10 +84,12 @@ io.on('connection', socket => {
     let room = socket.room;
 
     //removes user from room list
-    pub.lrem(`room_${room}`, -99, username, (err, data) => {
-      if (err) { console.log('error in username removal from room :', err) }
-      else { console.log(`user: ${username} disconnected from room: ${room }`) }
-    })
+    if (username) {
+      pub.lrem(`room_${room}`, -99, username, (err, data) => {
+        if (err) { console.log('error in username removal from room :', err) }
+        else { console.log(`user: ${username} disconnected from room: ${room }`) }
+      })
+    }
 
     //updates new online users list
     pub.lrange(`room_${room}`, 0, -1, (err, users) => {
@@ -97,7 +99,7 @@ io.on('connection', socket => {
       } else {
         //deletes message data if room is empty
         if (err) { console.log('error getting users from redis :', err) }
-        else { pub.del(`messages_${room}`) }
+        // else { pub.del(`messages_${room}`) }
       }
     })
 
@@ -113,16 +115,9 @@ io.on('connection', socket => {
 //next.js
 nextApp.prepare().then(() => {
 
-  app.get('/chat/getChat', (req, res) => {
-    console.log(req);
-    res.sendFile('webpack.js', {root: `${__dirname}/../.next/static/runtime/`});
-  })
-
   app.get('*', (req, res) => {
     return nextHandler(req, res);
   })
-
-  
 
   server.listen(port, (err) => {
     if (err) throw err;
