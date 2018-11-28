@@ -38,7 +38,7 @@ io.on('connection', socket => {
 
   //on new user connection
   socket.on('user connected', (user) => {
-    console.log('user connected :', user.username, 'on socket :', socket.id, 'in room :', socket.room);
+    // console.log('user connected :', user.username, 'on socket :', socket.id, 'in room :', socket.room);
     // console.log('user :', user);
     //sets socket.username from client provided username string
     socket.username = user.username;
@@ -51,7 +51,7 @@ io.on('connection', socket => {
     pub.hmset(`room_${socket.room}`, socket.username, (socket.avatar || 'none'), (err, res) => {
       if (err) console.log('error saving user to redis :', err);
       else {
-        console.log('user saved to redis:', res);
+        // console.log('user saved to redis:', res);
       }
     });
 
@@ -62,7 +62,7 @@ io.on('connection', socket => {
       else {
         io.sockets.in(socket.room).emit('update users', users)
       }
-    })
+    });
 
     //send all messages for room on new user connection
     pub.lrange(`messages_${socket.room}`, 0, -1, (err, messages) => {
@@ -74,15 +74,38 @@ io.on('connection', socket => {
         // socket.emit('chat message', messages);
       }
     });
+
+    //send all message avatars for room on new user connection
+    pub.hgetall(`message_avatars_${socket.room}`, (err, avatars) => {
+      if (err) console.log('error getting message avatars from redis :', err);
+      else {
+        io.sockets.in(socket.room).emit('update message avatars', avatars)
+      }
+    });
   })
 
   //sends message
   socket.on('chat message', (msg) => {
     let room = msg.host;
-    console.log('chat msg :', msg, 'in room:', room);
+    console.log('socket.username :', msg.user);
+    // console.log('chat msg :', msg, 'in room:', room);
+    //adds user avatar to the messageAvatars hashtable on redis
+    
     io.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
     pub.rpush(`messages_${room}`, JSON.stringify(msg));
     pub.ltrim(`messages_${room}`, 0, 99);
+  })
+  
+  socket.on('chat message avatar', (msg) => {
+    pub.hmset(`message_avatars_${msg.room}`, msg.user, (msg.avatar || 'none'), (err, res) => {
+      if (err) console.log('error saving user message avatar to redis :', err);
+    })
+    pub.hgetall(`message_avatars_${msg.room}`, (err, avatars) => {
+      if (err) console.log('error getting message avatars from redis :', err);
+      else {
+        io.sockets.in(msg.room).emit('update message avatars', avatars)
+      }
+    });
   })
 
 
@@ -97,7 +120,9 @@ io.on('connection', socket => {
     if (username) {
       pub.hdel(`room_${room}`, -99, username, (err, data) => {
         if (err) { console.log('error in username removal from room :', err) }
-        else { console.log(`user: ${username} disconnected from room: ${room }`) }
+        else {
+          // console.log(`user: ${username} disconnected from room: ${room }`) 
+        }
       })
     }
 
