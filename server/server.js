@@ -37,24 +37,34 @@ io.on('connection', socket => {
   })
 
   //on new user connection
-  socket.on('user connected', (username) => {
-    console.log('user connected :', username, 'on socket :', socket.id, 'in room :', socket.room);
-    
+  socket.on('user connected', (user) => {
+    console.log('user connected :', user.username, 'on socket :', socket.id, 'in room :', socket.room);
+    // console.log('user :', user);
     //sets socket.username from client provided username string
-    socket.username = username;
+    socket.username = user.username;
+    if (user.userAvatar) {
+      socket.avatar = user.userAvatar
+      // console.log('socket.avatar :', socket.avatar);
+    }
 
-    //pushes to redis users in room list
-    pub.lpush(`room_${socket.room}`, socket.username);
+    //pushes to redis users in room hash
+    pub.hmset(`room_${socket.room}`, socket.username, (socket.avatar || 'none'), (err, res) => {
+      if (err) console.log('error saving user to redis :', err);
+      else {
+        console.log('user saved to redis:', res);
+      }
+    });
 
     //send all users from room to update client online list
-    pub.lrange(`room_${socket.room}`, 0, -1, (err, users) => {
+    pub.hgetall(`room_${socket.room}`, (err, users) => {
+      // console.git log('users :', users);
       if (err) { console.log(`error getting users from redis: ${err}`) }
       else {
         io.sockets.in(socket.room).emit('update users', users)
       }
     })
 
-    
+    //send all messages for room on new user connection
     pub.lrange(`messages_${socket.room}`, 0, -1, (err, messages) => {
       if (err) { console.log('error getting messages from redis', err) }
       else {
@@ -85,15 +95,15 @@ io.on('connection', socket => {
 
     //removes user from room list
     if (username) {
-      pub.lrem(`room_${room}`, -99, username, (err, data) => {
+      pub.hdel(`room_${room}`, -99, username, (err, data) => {
         if (err) { console.log('error in username removal from room :', err) }
         else { console.log(`user: ${username} disconnected from room: ${room }`) }
       })
     }
 
     //updates new online users list
-    pub.lrange(`room_${room}`, 0, -1, (err, users) => {
-      if (users.length > 0) {
+    pub.hgetall(`room_${room}`, (err, users) => {
+      if (users) {
         if (err) { console.log('error getting users from redis :', err) }
         else { io.sockets.in(room).emit('user disconnected', users) }
       } else {
