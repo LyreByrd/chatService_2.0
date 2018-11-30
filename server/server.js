@@ -28,7 +28,8 @@ let port = process.env.PORT || 8000;
 // const users = {};
 // rooms = [];
 // const messages = {};
-io.on('connection', socket => {
+const chat = io.of('/chat');
+chat.on('connection', socket => {
 
   //joins room and sets room on socket
   socket.on('join room', room => {
@@ -60,7 +61,7 @@ io.on('connection', socket => {
       // console.git log('users :', users);
       if (err) { console.log(`error getting users from redis: ${err}`) }
       else {
-        io.sockets.in(socket.room).emit('update users', users)
+        chat.sockets.in(socket.room).emit('update users', users)
       }
     });
 
@@ -91,7 +92,7 @@ io.on('connection', socket => {
     // console.log('chat msg :', msg, 'in room:', room);
     //adds user avatar to the messageAvatars hashtable on redis
     
-    io.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
+    chat.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
     pub.rpush(`messages_${room}`, JSON.stringify(msg));
     pub.ltrim(`messages_${room}`, 0, 99);
   })
@@ -103,7 +104,7 @@ io.on('connection', socket => {
     pub.hgetall(`message_avatars_${msg.room}`, (err, avatars) => {
       if (err) console.log('error getting message avatars from redis :', err);
       else {
-        io.sockets.in(msg.room).emit('update message avatars', avatars)
+        chat.sockets.in(msg.room).emit('update message avatars', avatars)
       }
     });
   })
@@ -130,7 +131,7 @@ io.on('connection', socket => {
     pub.hgetall(`room_${room}`, (err, users) => {
       if (users) {
         if (err) { console.log('error getting users from redis :', err) }
-        else { io.sockets.in(room).emit('user disconnected', users) }
+        else { chat.sockets.in(room).emit('user disconnected', users) }
       } else {
         //deletes message data if room is empty
         if (err) { console.log('error getting users from redis :', err) }
