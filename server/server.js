@@ -28,8 +28,8 @@ let port = process.env.PORT || 8000;
 // const users = {};
 // rooms = [];
 // const messages = {};
-const chat = io.of('/chat');
-chat.on('connection', socket => {
+
+io.on('connection', socket => {
 
   //joins room and sets room on socket
   socket.on('join room', room => {
@@ -42,6 +42,10 @@ chat.on('connection', socket => {
     // console.log('user connected :', user.username, 'on socket :', socket.id, 'in room :', socket.room);
     // console.log('user :', user);
     //sets socket.username from client provided username string
+    if (socket.username === 'undefined') {
+      socket.disconnect();
+    }
+
     socket.username = user.username;
     if (user.userAvatar) {
       socket.avatar = user.userAvatar
@@ -61,7 +65,7 @@ chat.on('connection', socket => {
       // console.git log('users :', users);
       if (err) { console.log(`error getting users from redis: ${err}`) }
       else {
-        chat.sockets.in(socket.room).emit('update users', users)
+        io.sockets.in(socket.room).emit('update users', users)
       }
     });
 
@@ -88,11 +92,10 @@ chat.on('connection', socket => {
   //sends message
   socket.on('chat message', (msg) => {
     let room = msg.host;
-    console.log('socket.username :', msg.user);
     // console.log('chat msg :', msg, 'in room:', room);
     //adds user avatar to the messageAvatars hashtable on redis
     
-    chat.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
+    io.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
     pub.rpush(`messages_${room}`, JSON.stringify(msg));
     pub.ltrim(`messages_${room}`, 0, 99);
   })
@@ -104,7 +107,7 @@ chat.on('connection', socket => {
     pub.hgetall(`message_avatars_${msg.room}`, (err, avatars) => {
       if (err) console.log('error getting message avatars from redis :', err);
       else {
-        chat.sockets.in(msg.room).emit('update message avatars', avatars)
+        io.sockets.in(msg.room).emit('update message avatars', avatars)
       }
     });
   })
@@ -131,7 +134,7 @@ chat.on('connection', socket => {
     pub.hgetall(`room_${room}`, (err, users) => {
       if (users) {
         if (err) { console.log('error getting users from redis :', err) }
-        else { chat.sockets.in(room).emit('user disconnected', users) }
+        else { io.sockets.in(room).emit('user disconnected', users) }
       } else {
         //deletes message data if room is empty
         if (err) { console.log('error getting users from redis :', err) }
