@@ -53,12 +53,14 @@ io.on('connection', socket => {
     }
 
     //pushes to redis users in room hash
-    pub.hmset(`room_${socket.room}`, socket.username, (socket.avatar || 'none'), (err, res) => {
-      if (err) console.log('error saving user to redis :', err);
-      else {
-        // console.log('user saved to redis:', res);
-      }
-    });
+    if (user.username) {
+      pub.hmset(`room_${socket.room}`, socket.username, (socket.avatar || 'none'), (err, res) => {
+        if (err) console.log('error saving user to redis :', err);
+        else {
+          // console.log('user saved to redis:', res);
+        }
+      });
+    }
 
     //send all users from room to update client online list
     pub.hgetall(`room_${socket.room}`, (err, users) => {
@@ -101,6 +103,7 @@ io.on('connection', socket => {
   })
   
   socket.on('chat message avatar', (msg) => {
+
     pub.hmset(`message_avatars_${msg.room}`, msg.user, (msg.avatar || 'none'), (err, res) => {
       if (err) console.log('error saving user message avatar to redis :', err);
     })
