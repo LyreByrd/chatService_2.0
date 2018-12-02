@@ -46,7 +46,9 @@ io.on('connection', socket => {
       socket.disconnect();
     }
 
-    socket.username = user.username;
+    if (user.username) {
+      socket.username = user.username;
+    }
     if (user.userAvatar) {
       socket.avatar = user.userAvatar
       // console.log('socket.avatar :', socket.avatar);
