@@ -10,9 +10,6 @@ const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
 const REDIS_PASS = process.env.REDIS_PASS;
 
-// // const redis = require('socket.io-redis');
-// // io.adapter(redis({ host: REDIS_HOST, port: REDIS_PORT }));
-
 const redis = require('redis').createClient;
 const adapter = require("socket.io-redis");
 
