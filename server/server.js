@@ -1,12 +1,10 @@
 require('dotenv').config()
-const next = require('next')
+// const next = require('next')
 const app = require('express')()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
 const dev = process.env.NODE_ENV !== 'production';
-const nextApp = next({dev})
-const nextHandler = nextApp.getRequestHandler()
 
 const REDIS_HOST = process.env.REDIS_HOST;
 const REDIS_PORT = process.env.REDIS_PORT;
@@ -153,18 +151,11 @@ io.on('connection', socket => {
   })
 })
 
+app.get('*', (req, res) => {
+  return nextHandler(req, res);
+})
 
-
-
-//next.js
-nextApp.prepare().then(() => {
-
-  app.get('*', (req, res) => {
-    return nextHandler(req, res);
-  })
-
-  server.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`>> Listening on http://localhost:${port}`)
-  })
+server.listen(port, (err) => {
+  if (err) throw err;
+  console.log(`>> Listening on http://localhost:${port}`)
 })

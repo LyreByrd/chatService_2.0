@@ -8,27 +8,18 @@
     "dev": "next",
     "server": "nodemon server/server.js",
     "build": "next build",
-    "start": "next start",
-    "micro-start": "micro",
-    "micro-dev": "micro-dev"
+    "start": "next start"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.18.0",
     "body-parser": "^1.18.3",
     "dotenv": "^6.1.0",
     "express": "^4.16.4",
-    "micro": "^9.3.3",
-    "next": "^7.0.2",
-    "react": "^16.6.1",
-    "react-dom": "^16.6.1",
     "redis": "^2.8.0",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
     "socket.io-redis": "^5.2.0"
   },
-  "devDependencies": {
-    "micro-dev": "^3.0.0"
-  }
+  "devDependencies": {}
 }
