@@ -4,8 +4,8 @@ const privateKey = fs.readFileSync('../../../etc/letsencrypt/live/gamaycotte.com
 const certificate = fs.readFileSync('../../../etc/letsencrypt/live/gamaycotte.com/fullchain.pem').toString();
 const app = require('express')()
 const server = require('https').Server({
-  key: privateKey
-  // cert: certificate
+  key: privateKey,
+  cert: certificate
 },app);
 const io = require('socket.io')(server);
 
