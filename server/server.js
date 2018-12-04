@@ -22,11 +22,6 @@ io.adapter(adapter({ pubClient: pub, subClient: sub }));
 
 let port = process.env.PORT || 8000;
 
-//socket.io
-// const users = {};
-// rooms = [];
-// const messages = {};
-
 io.on('connection', socket => {
 
   //joins room and sets room on socket
@@ -37,9 +32,6 @@ io.on('connection', socket => {
 
   //on new user connection
   socket.on('user connected', (user) => {
-    // console.log('user connected :', user.username, 'on socket :', socket.id, 'in room :', socket.room);
-    // console.log('user :', user);
-    //sets socket.username from client provided username string
     if (socket.username === 'undefined') {
       socket.disconnect();
     }
@@ -49,7 +41,6 @@ io.on('connection', socket => {
     }
     if (user.userAvatar) {
       socket.avatar = user.userAvatar
-      // console.log('socket.avatar :', socket.avatar);
     }
 
     //pushes to redis users in room hash
@@ -64,7 +55,6 @@ io.on('connection', socket => {
 
     //send all users from room to update client online list
     pub.hgetall(`room_${socket.room}`, (err, users) => {
-      // console.git log('users :', users);
       if (err) { console.log(`error getting users from redis: ${err}`) }
       else {
         io.sockets.in(socket.room).emit('update users', users)
@@ -75,10 +65,7 @@ io.on('connection', socket => {
     pub.lrange(`messages_${socket.room}`, 0, -1, (err, messages) => {
       if (err) { console.log('error getting messages from redis', err) }
       else {
-        // console.log('socket.id', socket.id)
-        // console.log('messages from redis on user connect inside pub.lrange', messages);
         socket.emit('fetch messages', [...messages])
-        // socket.emit('chat message', messages);
       }
     });
 
@@ -94,16 +81,14 @@ io.on('connection', socket => {
   //sends message
   socket.on('chat message', (msg) => {
     let room = msg.host;
-    // console.log('chat msg :', msg, 'in room:', room);
-    //adds user avatar to the messageAvatars hashtable on redis
     
+    //adds user avatar to the messageAvatars hashtable on redis
     io.sockets.in(room).emit('chat message', [JSON.stringify(msg)]);
     pub.rpush(`messages_${room}`, JSON.stringify(msg));
     pub.ltrim(`messages_${room}`, 0, 99);
   })
   
   socket.on('chat message avatar', (msg) => {
-
     pub.hmset(`message_avatars_${msg.room}`, msg.user, (msg.avatar || 'none'), (err, res) => {
       if (err) console.log('error saving user message avatar to redis :', err);
     })
