@@ -1,11 +1,12 @@
 require('dotenv').config()
 const fs = require('fs');
+
 const privateKey = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.live/privkey.pem').toString();
 const certificate = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.live/fullchain.pem').toString();
 const app = require('express')();
-const server = require('https').Server({
-  key: privateKey,
-  cert: certificate
+const server = require('http').Server({
+  // key: privateKey,
+  // cert: certificate
 },app);
 const io = require('socket.io')(server);
 
@@ -38,15 +39,15 @@ io.on('connection', socket => {
       socket.disconnect();
     }
 
-    if (user.username) {
+    if (user && user.username) {
       socket.username = user.username;
     }
-    if (user.userAvatar) {
+    if (user && user.userAvatar) {
       socket.avatar = user.userAvatar
     }
 
     //pushes to redis users in room hash
-    if (user.username) {
+    if (user && user.username) {
       pub.hmset(`room_${socket.room}`, socket.username, (socket.avatar || 'none'), (err, res) => {
         if (err) console.log('error saving user to redis :', err);
         else {
