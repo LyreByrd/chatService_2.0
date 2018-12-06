@@ -1,7 +1,7 @@
 require('dotenv').config()
 const fs = require('fs');
-const privateKey = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.live/privkey.pem').toString();
-const certificate = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.live/fullchain.pem').toString();
+const privateKey = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.com/privkey.pem').toString();
+const certificate = fs.readFileSync('../../../etc/letsencrypt/live/lyrebyrd.com/fullchain.pem').toString();
 const app = require('express')();
 const server = require('https').Server({
   key: privateKey,
